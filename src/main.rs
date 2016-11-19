@@ -4,7 +4,7 @@ mod phi;
 mod views;
 
 fn main() {
-    ::phi::spawn("rusty-shooter", |_| {
-        Box::new(::views::RedView)
+    ::phi::spawn("rusty-shooter", |phi| {
+        Box::new(::views::ShipView::new(phi))
     });
 }
