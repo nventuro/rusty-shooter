@@ -84,7 +84,7 @@ where F: Fn(&mut Phi) -> Box<View> {
 
     // Create the window
     let window = video.window(title, 800, 600)
-        .position_centered().opengl().resizable()
+        .position_centered().opengl()
         .build().unwrap();
 
     // Create the context
@@ -127,7 +127,7 @@ where F: Fn(&mut Phi) -> Box<View> {
 
         // Logic & rendering
 
-        context.events.pump(&mut context.renderer);
+        context.events.pump();
 
         match current_view.render(&mut context, elapsed) {
             ViewAction::None =>

@@ -6,9 +6,10 @@ macro_rules! struct_events {
         use sdl2::EventPump;
 
         pub struct ImmediateEvents {
+            /// "Debounced" keyboard events: will be Some(true/false) only if the key was just pressed
             $( pub $k_alias: Option<bool>, )*
+            /// Other events
             $( pub $e_alias: bool, )*
-            resize: Option<(u32, u32)>
         }
 
         impl ImmediateEvents {
@@ -16,7 +17,6 @@ macro_rules! struct_events {
                 ImmediateEvents {
                     $( $k_alias: None, )*
                     $( $e_alias: false, )*
-                    resize: None
                 }
             }
         }
@@ -26,6 +26,7 @@ macro_rules! struct_events {
             pump: EventPump,
             pub now: ImmediateEvents,
 
+            /// "Raw" keyboard events: these hold the pressed status of a key
             $( pub $k_alias: bool, )*
         }
 
@@ -34,29 +35,25 @@ macro_rules! struct_events {
                 Events {
                     pump: pump,
                     now: ImmediateEvents::new(),
-
                     $( $k_alias: false, )*
                 }
             }
 
-            pub fn pump(&mut self, renderer: &mut Renderer) {
+            pub fn pump(&mut self) {
+                // These are created from scratch on each pass because they only
+                // hold the events of the current pass.
                 self.now = ImmediateEvents::new();
 
                 for event in self.pump.poll_iter() {
                     use sdl2::event::Event::*;
-                    use sdl2::event::WindowEventId::Resized;
                     use sdl2::keyboard::Keycode::*;
 
                     match event {
-                        Window { win_event_id: Resized, .. } => {
-                            self.now.resize = Some(renderer.output_size().unwrap());
-                        },
-
                         KeyDown { keycode, .. } => match keycode {
                             $(
                                 Some($k_sdl) => {
                                     if !self.$k_alias {
-                                        // Key pressed
+                                        // New keypress
                                         self.now.$k_alias = Some(true);
                                     }
 
@@ -70,7 +67,7 @@ macro_rules! struct_events {
                             $(
                                 Some($k_sdl) => {
                                     if self.$k_alias {
-                                        // Key released
+                                        // New keyrelease
                                         self.now.$k_alias = Some(false);
                                     }
 

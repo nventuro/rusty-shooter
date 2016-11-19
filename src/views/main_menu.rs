@@ -1,6 +1,6 @@
 use phi::{Phi, View, ViewAction};
 use phi::data::Rectangle;
-use phi::gfx::{Sprite, RenderSprite};
+use phi::gfx::Sprite;
 use sdl2::pixels::Color;
 
 struct Action {
@@ -84,7 +84,7 @@ impl View for MainMenuView {
             let (w, h) = sprite_to_render.size();
 
             let (win_w, win_h) = phi.output_size();
-            phi.renderer.render_sprite(sprite_to_render, Rectangle {
+            sprite_to_render.render(&mut phi.renderer, Rectangle {
                 x: (win_w - w) / 2.0,
                 //? We place every element under the previous one.
                 y: (win_h - h) / 2.0 + h * 1.5 * i as f64,
