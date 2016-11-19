@@ -6,9 +6,6 @@ use sdl2::pixels::Color;
 /// Pixels traveled by the player's ship every second, when it is moving.
 const PLAYER_SPEED: f64 = 180.0;
 
-const SHIP_W: f64 = 43.0;
-const SHIP_H: f64 = 39.0;
-
 struct Ship {
     rect: Rectangle,
     sprites: Vec<Sprite>,
@@ -37,16 +34,19 @@ pub struct ShipView {
 impl ShipView {
     pub fn new(phi: &mut Phi) -> ShipView {
         let spritesheet = Sprite::load(&mut phi.renderer, "assets/spaceship.png").unwrap();
+        let (w, h) = spritesheet.size();
+        let w = w / 3.0;
+        let h = h / 3.0;
 
         let mut sprites = Vec::with_capacity(9);
 
         for y in 0..3 {
             for x in 0..3 {
                 sprites.push(spritesheet.region(Rectangle {
-                    w: SHIP_W,
-                    h: SHIP_H,
-                    x: SHIP_W * x as f64,
-                    y: SHIP_H * y as f64,
+                    w: w,
+                    h: h,
+                    x: w * x as f64,
+                    y: h * y as f64,
                 }).unwrap())
             }
         }
@@ -54,8 +54,8 @@ impl ShipView {
         ShipView {
             player: Ship {
                 rect: Rectangle {
-                    w: SHIP_W,
-                    h: SHIP_H,
+                    w: w,
+                    h: h,
                     x: 64.0,
                     y: 64.0
                 },

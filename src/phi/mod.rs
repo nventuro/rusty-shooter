@@ -58,7 +58,6 @@ where F: Fn(&mut Phi) -> Box<View> {
     let sdl_context = ::sdl2::init().unwrap();
     let video = sdl_context.video().unwrap();
     let mut timer = sdl_context.timer().unwrap();
-    let image_context = ::sdl2_image::init(::sdl2_image::INIT_PNG).unwrap();
 
     // Create the window
     let window = video.window(title, 800, 600)
