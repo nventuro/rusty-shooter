@@ -61,3 +61,58 @@ impl Rectangle {
         other.y < self.y + self.h
     }
 }
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn rect_basics() {
+        use phi::data::Rectangle;
+
+        let bounding_rect = Rectangle {
+            x: 1.0,
+            y: 1.0,
+            w: 1.0,
+            h: 1.0
+        };
+
+        // Outside rectangles
+        let outside_rect = Rectangle { x: 0.0, .. bounding_rect };
+        assert!(!bounding_rect.contains(outside_rect));
+        assert!(!bounding_rect.overlaps(outside_rect));
+
+        let outside_rect = Rectangle { y: 0.0, .. bounding_rect };
+        assert!(!bounding_rect.contains(outside_rect));
+        assert!(!bounding_rect.overlaps(outside_rect));
+
+        let outside_rect = Rectangle { x: 2.0, .. bounding_rect };
+        assert!(!bounding_rect.contains(outside_rect));
+        assert!(!bounding_rect.overlaps(outside_rect));
+
+        let outside_rect = Rectangle { y: 2.0, .. bounding_rect };
+        assert!(!bounding_rect.contains(outside_rect));
+        assert!(!bounding_rect.overlaps(outside_rect));
+
+        // Overlapping rectangles
+        let overlap_rect = Rectangle { x: 0.5, y: 0.5, .. bounding_rect };
+        assert!(!bounding_rect.contains(overlap_rect));
+        assert!(bounding_rect.overlaps(overlap_rect));
+
+        let overlap_rect = Rectangle { x: 1.5, y: 0.5, .. bounding_rect };
+        assert!(!bounding_rect.contains(overlap_rect));
+        assert!(bounding_rect.overlaps(overlap_rect));
+
+        let overlap_rect = Rectangle { x: 0.5, y: 1.5, .. bounding_rect };
+        assert!(!bounding_rect.contains(overlap_rect));
+        assert!(bounding_rect.overlaps(overlap_rect));
+
+        let overlap_rect = Rectangle { x: 1.5, y: 1.5, .. bounding_rect };
+        assert!(!bounding_rect.contains(overlap_rect));
+        assert!(bounding_rect.overlaps(overlap_rect));
+
+        // Inside rectangles
+
+        let inside_rect = Rectangle { x: 1.5, y: 1.5, w: 0.5, h: 0.5 };
+        assert!(bounding_rect.contains(inside_rect));
+        assert!(bounding_rect.overlaps(inside_rect));
+    }
+}
