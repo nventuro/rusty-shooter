@@ -1,5 +1,6 @@
 #[macro_use]
 mod events;
+pub mod data;
 
 use sdl2::render::Renderer;
 
@@ -28,6 +29,13 @@ pub struct Phi<'window> {
     pub renderer: Renderer<'window>,
 }
 
+impl<'window> Phi<'window> {
+    pub fn output_size(&self) -> (f64, f64) {
+        let (w, h) = self.renderer.output_size().unwrap();
+        (w as f64, h as f64)
+    }
+}
+
 pub trait View {
     /// Called on every frame to take care of both the logic and
     /// the rendering of the current view.
@@ -45,7 +53,7 @@ where F: Fn(&mut Phi) -> Box<View> {
 
     // Create the window
     let window = video.window(title, 800, 600)
-        .position_centered().opengl()
+        .position_centered().opengl().resizable()
         .build().unwrap();
 
     // Create the context
@@ -88,7 +96,7 @@ where F: Fn(&mut Phi) -> Box<View> {
 
         // Logic & rendering
 
-        context.events.pump();
+        context.events.pump(&mut context.renderer);
 
         match current_view.render(&mut context, elapsed) {
             ViewAction::None =>

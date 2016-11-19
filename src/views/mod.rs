@@ -1,6 +1,6 @@
 use phi::{Phi, View, ViewAction};
+use phi::data::Rectangle;
 use sdl2::pixels::Color;
-use sdl2::rect::Rect as SdlRect;
 
 /// Pixels traveled by the player's ship every second, when it is moving.
 const PLAYER_SPEED: f64 = 180.0;
@@ -9,34 +9,12 @@ struct Ship {
     rect: Rectangle
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Rectangle {
-    pub x: f64,
-    pub y: f64,
-    pub w: f64,
-    pub h: f64,
-}
-
-impl Rectangle {
-    /// Generates an SDL-compatible Rect equivalent to `self`.
-    /// Panics if it could not be created, for example if a
-    /// coordinate of a corner overflows an `i32`.
-    pub fn to_sdl(self) -> Option<SdlRect> {
-        // Reject negative width and height
-        assert!(self.w >= 0.0 && self.h >= 0.0);
-
-        // SdlRect::new : `(i32, i32, u32, u32) -> Result<Option<SdlRect>>`
-        SdlRect::new(self.x as i32, self.y as i32, self.w as u32, self.h as u32)
-            .unwrap()
-    }
-}
-
 pub struct ShipView {
     player: Ship
 }
 
 impl ShipView {
-    pub fn new(phi: &mut Phi) -> ShipView {
+    pub fn new(_: &mut Phi) -> ShipView {
         ShipView {
             player: Ship {
                 rect: Rectangle {
@@ -78,6 +56,15 @@ impl View for ShipView {
 
         self.player.rect.x += dx;
         self.player.rect.y += dy;
+
+        let movable_region = Rectangle {
+            x: 0.0,
+            y: 0.0,
+            w: phi.output_size().0 * 0.70,
+            h: phi.output_size().1
+        };
+
+        self.player.rect = self.player.rect.move_inside(movable_region).unwrap();
 
         // Clear the scene
         phi.renderer.set_draw_color(Color::RGB(0, 0, 0));
