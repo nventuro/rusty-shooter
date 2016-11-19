@@ -39,16 +39,16 @@ impl Sprite {
     /// Returns `Some` if the `rect` is valid, i.e. included in the current
     /// region, and `None` otherwise.
     pub fn region(&self, rect: Rectangle) -> Option<Sprite> {
-        let new_src = Rectangle {
-            x: rect.x + self.src.x,
-            y: rect.y + self.src.y,
-            ..rect
-        };
+        //let new_src = Rectangle {
+        //    x: rect.x + self.src.x,
+        //    y: rect.y + self.src.y,
+        //    ..rect
+        //};
 
-        if self.src.contains(new_src) {
+        if self.src.contains(rect) {
             Some(Sprite {
                 tex: self.tex.clone(),
-                src: new_src
+                src: rect
             })
         } else {
             None
