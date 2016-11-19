@@ -12,13 +12,12 @@ impl Rectangle {
     /// Generates an SDL-compatible Rect equivalent to `self`.
     /// Panics if it could not be created, for example if a
     /// coordinate of a corner overflows an `i32`.
-    pub fn to_sdl(self) -> Option<SdlRect> {
+    pub fn to_sdl(self) -> SdlRect {
         // Reject negative width and height
         assert!(self.w >= 0.0 && self.h >= 0.0);
 
         // SdlRect::new : `(i32, i32, u32, u32) -> Result<Option<SdlRect>>`
         SdlRect::new(self.x as i32, self.y as i32, self.w as u32, self.h as u32)
-            .unwrap()
     }
 
     /// Returns a (perhaps moved) rectangle which is contained by a `parent`

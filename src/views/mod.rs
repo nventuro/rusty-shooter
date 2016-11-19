@@ -72,7 +72,7 @@ impl View for ShipView {
 
         // Render the ship
         phi.renderer.set_draw_color(Color::RGB(200, 200, 50));
-        phi.renderer.fill_rect(self.player.rect.to_sdl().unwrap());
+        phi.renderer.fill_rect(self.player.rect.to_sdl()).unwrap();
 
         ViewAction::None
     }
