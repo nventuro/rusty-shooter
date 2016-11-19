@@ -21,7 +21,7 @@ fn main() {
         events: Events::new(sdl_context.event_pump().unwrap())
     };
 
-    let mut current_view: Box<View> = Box::new(::views::DefaultView);
+    let mut current_view: Box<View> = Box::new(::views::RedView);
 
     let interval = 1_000 / 60;
     let mut before = timer.ticks();
@@ -51,6 +51,7 @@ fn main() {
 
         match current_view.render(&mut context, elapsed) {
             ViewAction::None => context.renderer.present(),
+            ViewAction::ChangeView { new_view } => current_view = new_view,
             ViewAction::Quit => break
         }
     }

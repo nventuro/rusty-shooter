@@ -5,7 +5,8 @@ use sdl2::render::Renderer;
 
 struct_events! {
     keyboard: {
-        key_escape: Escape
+        key_escape: Escape,
+        key_space: Space
     },
     other: {
         quit: Quit { .. }
@@ -14,6 +15,7 @@ struct_events! {
 
 pub enum ViewAction {
     None,
+    ChangeView { new_view: Box<View> },
     Quit,
 }
 
