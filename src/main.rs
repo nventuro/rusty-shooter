@@ -1,45 +1,57 @@
 extern crate sdl2;
 
-#[macro_use]
-mod events;
+mod phi;
+mod views;
 
-struct_events! {
-    keyboard: {
-        key_escape: Escape
-    },
-    other: {
-        quit: Quit { .. }
-    }
-}
-
-use sdl2::pixels::Color;
+use phi::{Events, Phi, View, ViewAction};
 
 fn main() {
     // Initialize SDL2
     let sdl_context = sdl2::init().unwrap();
     let video = sdl_context.video().unwrap();
+    let mut timer = sdl_context.timer().unwrap();
 
     // Create the window
     let window = video.window("rusty-shooter", 800, 600)
         .position_centered().opengl()
         .build().unwrap();
 
-    let mut renderer = window.renderer()
-        .accelerated()
-        .build().unwrap();
+    let mut context = Phi {
+        renderer: window.renderer().accelerated().build().unwrap(),
+        events: Events::new(sdl_context.event_pump().unwrap())
+    };
 
-    let mut events = Events::new(sdl_context.event_pump().unwrap());
+    let mut current_view: Box<View> = Box::new(::views::DefaultView);
+
+    let interval = 1_000 / 60;
+    let mut before = timer.ticks();
+    let mut last_second = timer.ticks();
+    let mut fps = 0;
 
     loop {
-        events.pump();
+        let now = timer.ticks();
+        let dt = now - before;
+        let elapsed = dt as f64 / 1_000.0;
 
-        if (events.now.key_escape == Some(true)) || (events.now.quit) {
-            break;
+        if dt < interval {
+            timer.delay(interval - dt);
+            continue;
         }
 
-        // Render a fully black window
-        renderer.set_draw_color(Color::RGB(0, 0, 0));
-        renderer.clear();
-        renderer.present();
+        before = now;
+        fps += 1;
+
+        if now - last_second > 1_000 {
+            println!("FPS: {}", fps);
+            last_second = now;
+            fps = 0;
+        }
+
+        context.events.pump();
+
+        match current_view.render(&mut context, elapsed) {
+            ViewAction::None => context.renderer.present(),
+            ViewAction::Quit => break
+        }
     }
 }
