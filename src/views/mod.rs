@@ -1,12 +1,33 @@
 use phi::{Phi, View, ViewAction};
 use phi::data::Rectangle;
+use phi::gfx::Sprite;
 use sdl2::pixels::Color;
 
 /// Pixels traveled by the player's ship every second, when it is moving.
 const PLAYER_SPEED: f64 = 180.0;
 
+const SHIP_W: f64 = 43.0;
+const SHIP_H: f64 = 39.0;
+
 struct Ship {
-    rect: Rectangle
+    rect: Rectangle,
+    sprites: Vec<Sprite>,
+    current: ShipFrame
+}
+
+/// The different states our ship might be in. In the image, they're ordered
+/// from left to right, then from top to bottom.
+#[derive(Clone, Copy)]
+enum ShipFrame {
+    UpNorm   = 0,
+    UpFast   = 1,
+    UpSlow   = 2,
+    MidNorm  = 3,
+    MidFast  = 4,
+    MidSlow  = 5,
+    DownNorm = 6,
+    DownFast = 7,
+    DownSlow = 8
 }
 
 pub struct ShipView {
@@ -14,16 +35,33 @@ pub struct ShipView {
 }
 
 impl ShipView {
-    pub fn new(_: &mut Phi) -> ShipView {
+    pub fn new(phi: &mut Phi) -> ShipView {
+        let spritesheet = Sprite::load(&mut phi.renderer, "assets/spaceship.png").unwrap();
+
+        let mut sprites = Vec::with_capacity(9);
+
+        for y in 0..3 {
+            for x in 0..3 {
+                sprites.push(spritesheet.region(Rectangle {
+                    w: SHIP_W,
+                    h: SHIP_H,
+                    x: SHIP_W * x as f64,
+                    y: SHIP_H * y as f64,
+                }).unwrap())
+            }
+        }
+
         ShipView {
             player: Ship {
                 rect: Rectangle {
+                    w: SHIP_W,
+                    h: SHIP_H,
                     x: 64.0,
-                    y: 64.0,
-                    w: 32.0,
-                    h: 32.0
-                }
-            }
+                    y: 64.0
+                },
+                sprites: sprites,
+                current: ShipFrame::MidNorm
+            },
         }
     }
 }
@@ -66,6 +104,18 @@ impl View for ShipView {
 
         self.player.rect = self.player.rect.move_inside(movable_region).unwrap();
 
+        self.player.current =
+            if dx == 0.0 && dy < 0.0       { ShipFrame::UpNorm }
+            else if dx > 0.0 && dy < 0.0   { ShipFrame::UpFast }
+            else if dx < 0.0 && dy < 0.0   { ShipFrame::UpSlow }
+            else if dx == 0.0 && dy == 0.0 { ShipFrame::MidNorm }
+            else if dx > 0.0 && dy == 0.0  { ShipFrame::MidFast }
+            else if dx < 0.0 && dy == 0.0  { ShipFrame::MidSlow }
+            else if dx == 0.0 && dy > 0.0  { ShipFrame::DownNorm }
+            else if dx > 0.0 && dy > 0.0   { ShipFrame::DownFast }
+            else if dx < 0.0 && dy > 0.0   { ShipFrame::DownSlow }
+            else { unreachable!() };
+
         // Clear the scene
         phi.renderer.set_draw_color(Color::RGB(0, 0, 0));
         phi.renderer.clear();
@@ -73,6 +123,8 @@ impl View for ShipView {
         // Render the ship
         phi.renderer.set_draw_color(Color::RGB(200, 200, 50));
         phi.renderer.fill_rect(self.player.rect.to_sdl()).unwrap();
+
+        self.player.sprites[self.player.current as usize].render(&mut phi.renderer, self.player.rect);
 
         ViewAction::None
     }
