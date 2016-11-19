@@ -3,7 +3,11 @@ mod events;
 pub mod data;
 pub mod gfx;
 
+use self::gfx::Sprite;
 use sdl2::render::Renderer;
+use sdl2::pixels::Color;
+use std::collections::HashMap;
+use std::path::Path;
 
 struct_events! {
     keyboard: {
@@ -28,19 +32,37 @@ pub enum ViewAction {
 pub struct Phi<'window> {
     pub events: Events,
     pub renderer: Renderer<'window>,
+    ttf_context: ::sdl2_ttf::Sdl2TtfContext,
+
+    cached_fonts: HashMap<(&'static str, u16), ::sdl2_ttf::Font<'window>>,
 }
 
 impl<'window> Phi<'window> {
-    fn new(events: Events, renderer: Renderer) -> Phi {
+    fn new(events: Events, renderer: Renderer, ttf_context: ::sdl2_ttf::Sdl2TtfContext) -> Phi {
         Phi {
             events: events,
-            renderer: renderer
+            renderer: renderer,
+            ttf_context: ttf_context,
+            cached_fonts: HashMap::new(),
         }
     }
 
     pub fn output_size(&self) -> (f64, f64) {
         let (w, h) = self.renderer.output_size().unwrap();
         (w as f64, h as f64)
+    }
+
+    pub fn ttf_str_sprite(&mut self, text: &str, font_path: &'static str, size: u16, color: Color) -> Option<Sprite> {
+        if let Some(font) = self.cached_fonts.get(&(font_path, size)) {
+            return font.render(text).blended(color).ok()
+                       .and_then(|surface| self.renderer.create_texture_from_surface(&surface).ok())
+                       .map(Sprite::new)
+        }
+
+        self.ttf_context.load_font(Path::new(font_path), size).ok()
+        .and_then(|font| font.render(text).blended(color).ok()
+                             .and_then(|surface| self.renderer.create_texture_from_surface(&surface).ok())
+                             .map(Sprite::new))
     }
 }
 
@@ -59,7 +81,6 @@ where F: Fn(&mut Phi) -> Box<View> {
     let video = sdl_context.video().unwrap();
     let mut timer = sdl_context.timer().unwrap();
     let _image_context = ::sdl2_image::init(::sdl2_image::INIT_PNG).unwrap();
-    let _ttf_context = ::sdl2_ttf::init().unwrap();
 
     // Create the window
     let window = video.window(title, 800, 600)
@@ -71,7 +92,8 @@ where F: Fn(&mut Phi) -> Box<View> {
         Events::new(sdl_context.event_pump().unwrap()),
         window.renderer()
             .accelerated()
-            .build().unwrap());
+            .build().unwrap(),
+        ::sdl2_ttf::init().unwrap());
 
     // Create the initial view
     let mut current_view = init(&mut context);
