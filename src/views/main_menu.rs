@@ -28,6 +28,7 @@ impl Action {
 
 pub struct MainMenuView {
     actions: Vec<Action>,
+    selected: i8,
 }
 
 impl MainMenuView {
@@ -41,6 +42,8 @@ impl MainMenuView {
                     ViewAction::Quit
                 })),
             ],
+
+            selected: 0,
         }
     }
 }
@@ -51,16 +54,40 @@ impl View for MainMenuView {
             return ViewAction::Quit;
         }
 
+        if phi.events.now.key_space == Some(true) {
+            return (self.actions[self.selected as usize].func)(phi);
+        }
+
+        if phi.events.now.key_down == Some(true) {
+            self.selected += 1;
+            if self.selected >= self.actions.len() as i8 {
+                self.selected = 0;
+            }
+        } else if phi.events.now.key_up == Some(true) {
+            self.selected -= 1;
+            if self.selected < 0 {
+                self.selected = (self.actions.len() - 1) as i8;
+            }
+        }
+
         // Clear the screen
         phi.renderer.set_draw_color(Color::RGB(0, 0, 0));
         phi.renderer.clear();
 
         for (i, action) in self.actions.iter().enumerate() {
-            let (w, h) = action.idle_sprite.size();
-            phi.renderer.render_sprite(&action.idle_sprite, Rectangle {
-                x: 32.0,
+            let sprite_to_render = if self.selected == i as i8 {
+                &action.hover_sprite
+            } else {
+                &action.idle_sprite
+            };
+
+            let (w, h) = sprite_to_render.size();
+
+            let (win_w, win_h) = phi.output_size();
+            phi.renderer.render_sprite(sprite_to_render, Rectangle {
+                x: (win_w - w) / 2.0,
                 //? We place every element under the previous one.
-                y: 32.0 + 48.0 * i as f64,
+                y: (win_h - h) / 2.0 + h * 1.5 * i as f64,
                 w: w,
                 h: h,
             });
